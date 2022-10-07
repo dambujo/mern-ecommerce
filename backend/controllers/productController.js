@@ -1,6 +1,7 @@
 const Product = require("../models/productModule");
 const ErrorHandler = require("../utils/errorhander");
 const cathcAsyncErrors = require("../middleware/catchAsyncError");
+const ApiFeature = require("../utils/apifeature");
 
 
 // Create Product
@@ -15,8 +16,13 @@ exports.createProduct = cathcAsyncErrors( async (req, res, next)=>{
 
 // Get All Product
 exports.getAllProducts = cathcAsyncErrors(async (req,res)=>{
-    const products = await Product.find()
 
+    const resultPerPage = 5;
+    const productCount = await Product.countDocuments();
+
+    const apiFeature = new ApiFeature(Product.find(), req.query).search().filter().pagination(resultPerPage)
+    const products = await apiFeature.query
+    
     res.status(200).json({
         sucess:true,
         products
@@ -69,6 +75,7 @@ exports.getProductDetails =cathcAsyncErrors( async (req,res,next)=>{
 
     res.status(200).json({
         sucess:true,
-        product
+        product,
+        productCount
     })
 })
