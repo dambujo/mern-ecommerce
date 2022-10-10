@@ -1,4 +1,4 @@
-const Product = require("../models/productModule");
+const Product = require("../models/productModel");
 const ErrorHandler = require("../utils/errorhander");
 const cathcAsyncErrors = require("../middleware/catchAsyncError");
 const ApiFeature = require("../utils/apifeature");
@@ -6,6 +6,8 @@ const ApiFeature = require("../utils/apifeature");
 
 // Create Product
 exports.createProduct = cathcAsyncErrors( async (req, res, next)=>{
+
+    req.body.user = req.user.id;
     const product = await Product.create(req.body);
 
     res.status(201).json({
@@ -79,3 +81,4 @@ exports.getProductDetails =cathcAsyncErrors( async (req,res,next)=>{
         productCount
     })
 })
+
