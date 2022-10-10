@@ -3,6 +3,7 @@ const cathcAsyncErrors = require("../middleware/catchAsyncError");
 const User = require("../models/userModel");
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail");
+const crypto = require('crypto');
 
 // Register a user
 exports.registerUser = cathcAsyncErrors(async (req, res, next) => {
@@ -11,7 +12,7 @@ exports.registerUser = cathcAsyncErrors(async (req, res, next) => {
     const user = await User.create({
         name,
         email,
-        password,
+        password, 
         avatar: {
             public_id: "this is a sample id",
             url: "profileUl",
@@ -66,7 +67,7 @@ exports.forgotPassword = cathcAsyncErrors(async (req, res, next) => {
     const user = await User.findOne({ email: req.body.email });
 
     if (!user) {
-        return next(new ErrorHandler("User not found with this email", 404));
+        return next(new ErrorHandler("Sorry...! User not found with this email", 404));
     }
 
     // Get reset token
@@ -79,7 +80,7 @@ exports.forgotPassword = cathcAsyncErrors(async (req, res, next) => {
         "host"
     )}/api/v1/password/reset/${resetToken}`;
 
-    const message = `Your password reset token is as follow:\n\n${resetPasswordUrl}\n\nIf you have not requested this email, then ignore it.`;
+    const message = `Click the link to reset your password:\n\n${resetPasswordUrl}\n\nIf you have not requested this email, then ignore it.`;
 
     try {
         await sendEmail({
@@ -101,3 +102,66 @@ exports.forgotPassword = cathcAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler(error.message, 500));
     }
 })
+
+// Reset Password
+exports.resetPassword = cathcAsyncErrors(async (req, res, next) => {
+    // Hash URL token
+    const resetPasswordToken = crypto
+        .createHash("sha256")
+        .update(req.params.token)
+        .digest("hex");
+
+    const user = await User.findOne({
+        resetPasswordToken,
+        resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+        return next(new ErrorHandler("Password reset token is invalid or has been expired", 400));
+    }
+
+    if (req.body.password !== req.body.confirmPassword) {
+        return next(new ErrorHandler("Password does not match", 400));
+    }
+
+    // Setup new password
+    user.password = req.body.password;
+
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    sendToken(user, 200, res);
+})
+
+// getUserDetails
+exports.getUserDetails = cathcAsyncErrors(async (req, res, next) => {
+    const user = await User.findById(req.user.id);
+
+    res.status(200).json({
+        success: true,
+        user,
+    });
+})
+
+
+// Delete User --Admin
+exports.deleteUser = cathcAsyncErrors(async (req, res, next) => {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+        return next(new ErrorHandler("User not found with this ID", 404));
+    }
+
+    // Remove avatar from cloudinary
+    const image_id = user.avatar.public_id;
+    await cloudinary.v2.uploader.destroy(image_id);
+
+    await user.remove();
+
+    res.status(200).json({
+        success: true,
+    });
+}
+)
