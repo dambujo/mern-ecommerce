@@ -12,7 +12,7 @@ exports.registerUser = cathcAsyncErrors(async (req, res, next) => {
     const user = await User.create({
         name,
         email,
-        password, 
+        password,
         avatar: {
             public_id: "this is a sample id",
             url: "profileUl",
@@ -156,7 +156,7 @@ exports.updatePassword = cathcAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler("Old password is incorrect", 400));
     }
 
-    if(req.body.newPassword !== req.body.confirmPassword) {
+    if (req.body.newPassword !== req.body.confirmPassword) {
         return next(new ErrorHandler("Password does not match", 400));
     }
 
@@ -183,9 +183,54 @@ exports.updateProfile = cathcAsyncErrors(async (req, res, next) => {
 
     res.status(200).json({
         success: true,
+        message: "Profile updated successfully",
     });
 })
 
+// Get all users
+exports.getAllUsers = cathcAsyncErrors(async (req, res, next) => {
+    const users = await User.find();
+
+    res.status(200).json({
+        success: true,
+        users,
+    });
+})
+
+// Get single user (admin)
+exports.getSingleUser = cathcAsyncErrors(async (req, res, next) => {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+        return next(new ErrorHandler(`User does not found with id: ${req.params.id}`, 404));
+    }
+
+    res.status(200).json({
+        success: true,
+        user,
+    });
+})
+
+// Update user Role (admin)
+exports.updateUserRole = cathcAsyncErrors(async (req, res, next) => {
+    const newUserData = {
+        name: req.body.name,
+        email: req.body.email,
+        role: req.body.role,
+    }
+
+    const user = await User.findByIdAndUpdate(req.params.id, newUserData, {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false,
+
+    });
+
+    res.status(200).json({
+        success: true,
+        message: "User role updated successfully",
+    });
+})
 
 // Delete User --Admin
 exports.deleteUser = cathcAsyncErrors(async (req, res, next) => {
@@ -196,13 +241,14 @@ exports.deleteUser = cathcAsyncErrors(async (req, res, next) => {
     }
 
     // Remove avatar from cloudinary
-    const image_id = user.avatar.public_id;
-    await cloudinary.v2.uploader.destroy(image_id);
+    // const image_id = user.avatar.public_id;
+    // await cloudinary.v2.uploader.destroy(image_id);
 
     await user.remove();
 
     res.status(200).json({
         success: true,
+        message: "User deleted successfully",
     });
 }
 )
