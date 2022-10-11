@@ -166,6 +166,26 @@ exports.updatePassword = cathcAsyncErrors(async (req, res, next) => {
     sendToken(user, 200, res);
 })
 
+// Update User Profile
+exports.updateProfile = cathcAsyncErrors(async (req, res, next) => {
+    const newUserData = {
+        name: req.body.name,
+        email: req.body.email,
+    }
+
+    // Update avatar: TODO
+
+    const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false,
+    });
+
+    res.status(200).json({
+        success: true,
+    });
+})
+
 
 // Delete User --Admin
 exports.deleteUser = cathcAsyncErrors(async (req, res, next) => {
