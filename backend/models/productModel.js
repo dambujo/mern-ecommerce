@@ -6,7 +6,7 @@ const productSchema = mongoose.Schema({
         required: [true, "Please enter product name"],
         trim: true,
     },
-    description:{
+    description: {
         type: String,
         required: [true, "Please enter product description"],
     },
@@ -15,59 +15,64 @@ const productSchema = mongoose.Schema({
         required: [true, "Please enter product price"],
         maxLenght: [8, "Price cannot exceed 8 characters"],
     },
-    rating: {
+    ratings: {
         type: Number,
         default: 0,
     },
     images: [
         {
-        public_id:{
-            type: String,
-            required: true,
-        },
-        url: {
-            type: String,
-            required: true,
-        }
-    }],
+            public_id: {
+                type: String,
+                required: true,
+            },
+            url: {
+                type: String,
+                required: true,
+            }
+        }],
     category: {
         type: String,
         required: [true, "Please select category for this product"],
     },
-    stock:{
+    stock: {
         type: Number,
         required: [true, "Please enter product stock"],
         maxLenght: [4, "Stock cannot exceed 4 characters"],
         default: 1
     },
-    numOfReviews:{
+    numOfReviews: {
         type: Number,
         default: 0
     },
-    reviews:[
+    reviews: [
         {
-            name:{
-                type:String,
+            users: {
+                type: mongoose.Schema.ObjectId,
+                ref: "User",
                 required: true,
             },
-            rating:{
+            name: {
+                type: String,
+                required: true,
+            },
+            rating: {
                 type: Number,
                 required: true
             },
-            comment:{
-                type:String,
-                required:true
+            comment: {
+                type: String,
+                required: true
             }
         }
     ],
-    user:{
+    user: {
         type: mongoose.Schema.ObjectId,
         ref: 'User',
         required: true,
     },
-    createAt:{
-        type:Date,
-        default:Date.now
+    createAt: {
+        type: Date,
+        default: Date.now
     }
 })
 
